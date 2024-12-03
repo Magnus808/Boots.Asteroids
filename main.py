@@ -6,6 +6,19 @@ from AsteroidField import AsteroidField
 from asteroid import Asteroid
 from shot import Shot
 
+pygame.font.init()
+font = pygame.font.Font(None, 36)
+
+class GameManager:
+    def __init__(self):
+        self.score = 0
+
+    def add_score(self, amount):
+        self.score += amount
+        print(f"Score updated! Current score: {self.score}")
+
+    def asteroid_destroyed(self):
+        self.add_score(1)
 
 def main():
     print("Starting asteroids!")
@@ -14,6 +27,7 @@ def main():
     
     pygame.init()
     
+    game_manager = GameManager()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     asteroids = pygame.sprite.Group()
     shots_group = pygame.sprite.Group()
@@ -32,9 +46,9 @@ def main():
     AsteroidField.containers = (updatable,)
     asteroid_field = AsteroidField()
 
-    game_loop(screen, updatable, drawable, player, asteroids, shots_group, asteroids_group)
+    game_loop(screen, updatable, drawable, player, asteroids, shots_group, asteroids_group, game_manager)
   
-def game_loop(screen, updatable, drawable, player, asteroids, shots_group, asteroids_group):
+def game_loop(screen, updatable, drawable, player, asteroids, shots_group, asteroids_group, game_manager):
     clock = pygame.time.Clock()
     dt = 0
     x = SCREEN_WIDTH / 2
@@ -48,6 +62,16 @@ def game_loop(screen, updatable, drawable, player, asteroids, shots_group, aster
         dt = clock.tick(60) / 1000
         screen.fill((0, 0, 0))
         updatable.update(dt=dt)
+
+        # Render the score text
+        score_text = font.render(f"Score: {game_manager.score}", True, (255, 255, 255))
+
+        # Blit the score text at the top-left corner
+        screen.blit(score_text, (10, 10))
+
+        for sprite in drawable:
+            sprite.draw(screen)
+
         for sprite in drawable:
             sprite.draw(screen)
         pygame.display.flip()
@@ -57,6 +81,7 @@ def game_loop(screen, updatable, drawable, player, asteroids, shots_group, aster
                 if asteroid.collision(bullet):
                     asteroid.split(ASTEROID_MIN_RADIUS)
                     bullet.kill()
+                    game_manager.asteroid_destroyed()
             
         for asteroid in asteroids:
             if player.collision(asteroid):
